@@ -22,15 +22,27 @@ main :: proc() {
     rl.InitWindow(3840, 2160, "Inventory System")
     rl.SetTargetFPS(60)
 
+    init_item_database()
     ui_initial_setup()
 
     inventory_section := UI_CONTENT.center
     inv_width, inv_height := get_width_height(inventory_section)
     cut_bottom(&inventory_section, inv_height*0.30)
 
-    inventory_handler()
-
     for !rl.WindowShouldClose() {
+        r_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.R)
+        e_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.E)
+
+        if r_key_pressed {
+            new_item, ok := create_item(3, 10)
+            ok = add_item(new_item)
+        }
+
+        if e_key_pressed {
+            new_item, ok := create_item(1, 1)
+            ok = add_item(new_item)
+        }
+
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
@@ -41,4 +53,6 @@ main :: proc() {
     }
 
     rl.CloseWindow()
+
+    delete(ITEM_DB)
 }
