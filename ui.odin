@@ -64,6 +64,12 @@ draw_rect :: proc(rect: Rect, color: rl.Color, outline_color: rl.Color = rl.BLAC
     rl.DrawRectangleLinesEx(rl_rect, 2, outline_color)
 }
 
+is_colliding_with_mouse :: proc(rect: Rect) -> bool {
+    mouse_pos := rl.GetMousePosition()
+    rect := rect_to_raylib(rect)
+    return  rl.CheckCollisionPointRec(mouse_pos, rect)
+}
+
 draw_text_in_rect :: proc(text: cstring, rect: Rect, font_size: i32, color: rl.Color) {
     text_width := rl.MeasureText(text, font_size)
     rect_width := rect.maxx - rect.minx

@@ -3,6 +3,9 @@ package main
 import "core:fmt"
 import rl "vendor:raylib"
 import "core:mem"
+import "core:math/rand"
+
+LEFT_MOUSE_DOWN := false
 
 main :: proc() {
     tracking_allocator: mem.Tracking_Allocator
@@ -32,15 +35,25 @@ main :: proc() {
     for !rl.WindowShouldClose() {
         r_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.R)
         e_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.E)
+        d_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.D)
+
+        mouse_pos := rl.GetMousePosition()
+        LEFT_MOUSE_DOWN = rl.IsMouseButtonDown(rl.MouseButton.LEFT)
 
         if r_key_pressed {
             new_item, ok := create_item(3, 10)
-            ok = add_item(new_item)
+            index := rand.int31_max(29)
+            add_item_specific_index(new_item, int(index), true)
+    
         }
 
         if e_key_pressed {
             new_item, ok := create_item(1, 1)
             ok = add_item(new_item)
+        }
+
+        if d_key_pressed {
+            remove_item(3, 5)
         }
 
         rl.BeginDrawing()
