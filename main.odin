@@ -6,6 +6,8 @@ import "core:mem"
 import "core:math/rand"
 
 LEFT_MOUSE_DOWN := false
+TEXTURE: rl.Texture
+CELL_SIZE :: 16
 
 main :: proc() {
     tracking_allocator: mem.Tracking_Allocator
@@ -25,6 +27,8 @@ main :: proc() {
     rl.InitWindow(3840, 2160, "Inventory System")
     rl.SetTargetFPS(60)
 
+    TEXTURE = rl.LoadTexture("assets/materials.png")
+
     init_item_database()
     ui_initial_setup()
 
@@ -36,6 +40,7 @@ main :: proc() {
         r_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.R)
         e_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.E)
         d_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.D)
+        g_key_pressed := rl.IsKeyPressed(rl.KeyboardKey.G)
 
         mouse_pos := rl.GetMousePosition()
         LEFT_MOUSE_DOWN = rl.IsMouseButtonDown(rl.MouseButton.LEFT)
@@ -56,10 +61,19 @@ main :: proc() {
             remove_item(3, 5)
         }
 
+        if g_key_pressed {
+            item_index := rand.int31_max(6)+1
+            new_item, ok := create_item(int(item_index), 10)
+            index := rand.int31_max(29)   
+
+            add_item_specific_index(new_item, int(index), true)
+        }
+
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
-        draw_rect(inventory_section, rl.GRAY, rl.WHITE)
+        
+        draw_inventory_background(inventory_section, rl.Color({176, 137, 104, 255}),  rl.Color({127, 85, 57, 255}))
         draw_inventory_ui(inventory_section)
 
         rl.EndDrawing()

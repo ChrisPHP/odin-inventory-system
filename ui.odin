@@ -81,6 +81,61 @@ draw_text_in_rect :: proc(text: cstring, rect: Rect, font_size: i32, color: rl.C
     rl.DrawText(text, i32(x), i32(y), font_size, color)
 }
 
+draw_text_hover :: proc(text: cstring, font_size: i32, color: rl.Color) {
+    mouse_pos := rl.GetMousePosition()
+    rl.DrawText(text, i32(mouse_pos.x), i32(mouse_pos.y), font_size, color)   
+}
+
+draw_texture_hover :: proc(pos: [2]int, rl_rect: rl.Rectangle) {
+    tile_x := pos[0]
+    tile_y := pos[1]
+
+    mouse_pos := rl.GetMousePosition()
+    rect := rl.Rectangle{f32(tile_x)*CELL_SIZE, f32(tile_y)*CELL_SIZE, CELL_SIZE, CELL_SIZE}
+    tileDest := rl.Rectangle{mouse_pos.x, mouse_pos.y, rl_rect.width, rl_rect.width}
+
+    origin:f32  = rl_rect.width/2
+
+    rl.DrawTexturePro(TEXTURE, rect, tileDest, rl.Vector2{origin, origin}, 0, rl.WHITE)
+}
+
+draw_texture_in_rect :: proc(pos: [2]int, rect: Rect) {
+    tile_x := pos[0]
+    tile_y := pos[1]
+    rect_width := rect.maxx - rect.minx
+    rect_height := rect.maxy - rect.miny
+
+    x := rect.minx + (rect_width/2)
+    y := rect.miny + (rect_height/2)
+    rect := rl.Rectangle{f32(tile_x)*CELL_SIZE, f32(tile_y)*CELL_SIZE, CELL_SIZE, CELL_SIZE}
+    tileDest := rl.Rectangle{f32(x), f32(y), rect_width, rect_width}
+
+    origin:f32  = rect_width/2
+
+    rl.DrawTexturePro(TEXTURE, rect, tileDest, rl.Vector2{origin, origin}, 0, rl.WHITE)
+}
+
+
+draw_inventory_slot :: proc(rect: Rect, color: rl.Color, shadow_color: rl.Color = rl.BLACK) {
+    shadow_rect := rect_to_raylib(rect)
+    rl.DrawRectangleRounded(shadow_rect, 0.1, 1, shadow_color)
+    
+    base_rect := shadow_rect
+    base_rect.y += 10
+    base_rect.height -= 10
+    rl.DrawRectangleRounded(base_rect, 0.1, 1, color)
+}
+
+draw_inventory_background :: proc(rect: Rect, color: rl.Color, shadow_color: rl.Color = rl.BLACK) {
+    shadow_rect := rect_to_raylib(rect)
+    rl.DrawRectangleRounded(shadow_rect, 0.1, 1, shadow_color)
+
+    base_rect := shadow_rect
+    base_rect.y -= 10
+    base_rect.height -= 10
+    rl.DrawRectangleRounded(base_rect, 0.1, 1, color)
+}
+
 ui_initial_setup :: proc() {
     width :f32= 3840
     height :f32= 2160

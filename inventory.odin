@@ -17,6 +17,7 @@ ItemInfo :: struct {
     stack: int,
     type: ItemType,
     stack_limit: int,
+    texture_coords: [2]int
 }
 
 HeldItemInfo :: struct {
@@ -40,12 +41,12 @@ HELD_ITEM := HeldItemInfo{
 init_item_database :: proc() {
     ITEM_DB = make(ItemDatabase)
 
-    register_item({1, "Pickaxe", "A Simple pickaxe.", 0, .TOOL, 1})
-    register_item({2, "Sword", "A reliable steel sword.", 0, .TOOL, 1})
-    register_item({3, "Strawberry", "A fresh, tasty strawberry.", 0, .FOOD, 64})
-    register_item({4, "Raspberry", "A fresh, sweet raspberry.", 0, .FOOD, 64})
-    register_item({5, "Stone Block", "A solid block of stone.", 0, .BLOCK, 64})
-    register_item({6, "Wood Planks", "Processed wooden planks.", 0, .BLOCK, 64})
+    register_item({1, "Pickaxe", "A Simple pickaxe.", 0, .TOOL, 1, {0,0}})
+    register_item({2, "Sword", "A reliable steel sword.", 0, .TOOL, 1, {0,1}})
+    register_item({3, "Strawberry", "A fresh, tasty strawberry.", 0, .FOOD, 64, {2, 0}})
+    register_item({4, "Apple", "A fresh, sweet apple.", 0, .FOOD, 64, {2,1}})
+    register_item({5, "Stone", "A piece of stone.", 0, .BLOCK, 64, {1,0}})
+    register_item({6, "Wood Logs", "Cut wooden logs.", 0, .BLOCK, 64, {1,1}})
 }
 
 register_item :: proc(item: ItemInfo) {
@@ -192,11 +193,18 @@ draw_inventory_ui :: proc(inv_rect: Rect) {
     new_inv_rect := inv_rect
     cut_left(&new_inv_rect, 50)
     cut_right(&new_inv_rect, 50)
-    cut_top(&new_inv_rect, 50)
+
+    top_inventory := cut_top(&new_inv_rect, 200)
+    banner_text := cut_left(&top_inventory, 400)
+    //draw_rect(top_inventory, rl.BLACK)
+    draw_text_in_rect("Inventory", banner_text, 70, rl.WHITE)
+
     cut_bottom(&new_inv_rect, 50)
     inv_width, inv_height := get_width_height(new_inv_rect)
 
-    index := 0
+    index : int = 0
+    hover_item : bool = false
+    hover_item_name : cstring = ""
     row_rect := cut_top(&new_inv_rect, inv_height/3.1)
     for &i, array_index in INVENTORY {
         if index == 10 {
@@ -207,29 +215,43 @@ draw_inventory_ui :: proc(inv_rect: Rect) {
 
         section_rect := cut_left(&row_rect, inv_width/10)
         cut_right(&section_rect, 25)
-        draw_rect(section_rect, rl.WHITE,rl.BLACK)
+        draw_inventory_slot(section_rect, rl.Color({156, 102, 68, 255}),  rl.Color({127, 85, 57, 255}))
 
-        //Check if held item is dropped onto a slot
+        //Check if held item is dropped onto a slot and not it's original slot
         if item_on_release_rect(section_rect) {
-            remaining := add_item_specific_index(HELD_ITEM.item, array_index)
-            if remaining > 0 {
-                fmt.println(remaining)
-                INVENTORY[HELD_ITEM.item_index].stack = remaining
-            } else {
-                INVENTORY[HELD_ITEM.item_index] = ItemInfo{}
+            if HELD_ITEM.item_index != array_index {
+                remaining := add_item_specific_index(HELD_ITEM.item, array_index)
+                if remaining > 0 {
+                    INVENTORY[HELD_ITEM.item_index].stack = remaining
+                } else {
+                    INVENTORY[HELD_ITEM.item_index] = ItemInfo{}
+                }
             }
             HELD_ITEM.holding = false
         }
 
-        if i.id != 0  {
+        // Check if the slot has an item to show
+        if i.id != 0   {
             item_pickup(i, array_index, section_rect)
-            split_rect := cut_top(&section_rect, 50)
-            text := fmt.ctprintf("%v", i.name)
-            stack := fmt.ctprintf("%v", i.stack)
-            draw_text_in_rect(text, split_rect, 40, rl.BLACK)
-            draw_text_in_rect(stack, section_rect, 40, rl.BLACK)
+            if !HELD_ITEM.holding || HELD_ITEM.item_index != array_index {
+                split_rect := cut_bottom(&section_rect, 50)
+                stack_rect := cut_right(&split_rect, 75)
+                text := fmt.ctprintf("%v", i.name)
+                stack := fmt.ctprintf("%v", i.stack)
+                draw_text_in_rect(stack, stack_rect, 50, rl.WHITE)
+                draw_texture_in_rect(i.texture_coords, section_rect)
+                if is_colliding_with_mouse(section_rect) {
+                    hover_item = true
+                    hover_item_name = text
+                }
+            }
         } 
         index += 1
+    }
+
+    //Display name of item when mouse over
+    if hover_item {
+        draw_text_hover(hover_item_name, 40, rl.WHITE)
     }
 
     //Return held item to original place when released
@@ -242,7 +264,10 @@ draw_inventory_ui :: proc(inv_rect: Rect) {
                 width=HELD_ITEM.rect.width,
                 height=HELD_ITEM.rect.height
             }
-            rl.DrawRectangleRec(new_rect, rl.BLUE)
+
+            draw_texture_hover(HELD_ITEM.item.texture_coords, new_rect)
+        } else{
+            HELD_ITEM.holding = false
         }
     }
 }
